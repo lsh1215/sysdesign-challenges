@@ -47,8 +47,12 @@
 sysdesign-challenges/
 ├── README.md
 ├── .gitignore
+├── templates/
+│   └── System-Design-Document/       # SDD 작성용 템플릿 모음
+│       ├── mock-interview-style.md   # 모의 인터뷰 스타일
+│       └── software-design-document-style.md  # 정통 SDD 스타일
 └── <topic>/                          # 시스템 디자인 주제 단위 디렉토리
-    ├── System-Design-Document/       # 설계 문서 (Google style)
+    ├── System-Design-Document/       # 설계 문서 (templates에서 복사)
     │   ├── design-doc.md
     │   └── diagrams/
     ├── source/                       # 마이크로서비스 구현체
@@ -67,18 +71,14 @@ sysdesign-challenges/
 
 ### 1. System Design Document
 
-Google 스타일 설계 문서. 다음 섹션을 기본 골격으로 사용합니다.
+두 가지 스타일의 템플릿을 `templates/System-Design-Document/`에 둔다. 같은 주제를 두 스타일로 작성해 비교하는 것도 권장된다.
 
-| Section | Purpose |
-|---|---|
-| Context | 어떤 서비스인지, 왜 만드는지 |
-| Goals / Non-goals | 무엇을 풀고, 무엇은 의도적으로 제외하는지 |
-| Requirements | Functional / Non-functional, SLO, 트래픽 추정 |
-| High-level Design | 컴포넌트 다이어그램, 데이터 흐름 |
-| Detailed Design | API, 데이터 모델, 핵심 알고리즘 |
-| Alternatives Considered | 검토했지만 채택하지 않은 옵션과 그 이유 |
-| Cross-cutting Concerns | 보안, 관측, 캐싱, 일관성, 장애 전파 |
-| Rollout & Migration | 배포·마이그레이션 전략 |
+| Style | When to Use | Template |
+|---|---|---|
+| **Mock Interview** | 빠른 스케치, 인터뷰 연습 | `mock-interview-style.md` |
+| **Software Design Document** | 정통 SDD, 팀 리뷰·운영 인계 | `software-design-document-style.md` |
+
+세부 비교와 사용법은 [`templates/System-Design-Document/README.md`](templates/System-Design-Document/README.md) 참고.
 
 ### 2. Source Code
 

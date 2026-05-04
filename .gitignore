@@ -1,8 +1,13 @@
 # ============================================================
 # Claude Code / AI tooling
 # ============================================================
-.claude/
+# .claude/ is now tracked (CLAUDE.md, settings.json, hooks, skills, agents).
+# Only the conversation log catchall is excluded.
+.claude/logs/
+
+# .omc/ is local-only (research notes, plans, state, notepad — personal).
 .omc/
+
 .aider*
 .cursorrules
 CLAUDE.local.md
@@ -191,3 +196,11 @@ temp/
 *.bak
 *.orig
 .scratch/
+
+# ============================================================
+# Sysdesign — per-topic conversation logs
+# ============================================================
+# .claude/ and .omc/ are already ignored above (catchall logs and state live there).
+# Topic conversation logs live at <topic>/conversation-log/ — auto-cleaned by
+# .claude/hooks/cleanup-logs.mjs (3d if shipped / 14d if abandoned / kept while active).
+*/conversation-log/

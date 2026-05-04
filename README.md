@@ -105,17 +105,101 @@ sysdesign-challenges/
 4. **검증** — 테스트 시나리오 실행 후 `test-results/`에 결과 정리
 5. **회고** — SDD에 "Findings vs Assumptions" 섹션 업데이트
 
+## Sysdesign Workflow (AI 디자인 파트너)
+
+위 Workflow를 자동화한 5개 스킬이 `.claude/skills/sysdesign-*` 에 있다. **슬래시 커맨드 없음** — 자연어로 트리거.
+
+### 시나리오 한 사이클
+
+```
+[Phase 1–3] "채팅 시스템 만들어보고 싶어"
+  → sysdesign-design 트리거
+  → chat-system/ 디렉토리 + mock-interview.md 템플릿 복사
+  → .omc/state/active-sysdesign-topic.txt 에 chat-system 기록
+  → 책 canned 숫자(50M DAU 등) 던지고 사용자가 조정
+  → 티키타카하며 mock-interview.md 즉시 갱신
+  → "DAU 100M이면 저장 얼마?" → sysdesign-frameworks 자동 주입 (capacity 공식)
+  → "캐시 도입하면 얼마나 빨라?" → frameworks 자동 주입 (Jeff Dean latency)
+
+[Phase 4: 사용자 리뷰]
+  chat-system/System-Design-Document/mock-interview.md 직접 보고 수정/추가
+
+[Phase 5] "이제 SDD로 넘어가자"
+  → sysdesign-sdd 트리거
+  → mock-interview.md + chat-system/conversation-log/*.log 통째로 읽음
+  → sdd.md 자동 bulk-fill
+  → SDD 전용 항목(Constraints/ADR/Risk/Rollout) 한 섹션씩 질문
+
+[Phase 6] "이제 구현하자"
+  → sysdesign-impl 트리거
+  → SDD 읽고 minimum-viable subset 결정 (CDN/multi-region 자동 제외)
+  → stack 확인 (default Spring Boot+Postgres+Redis+Kafka)
+  → chat-system/source/ + docker-compose.yml + NFR test stub 스캐폴딩
+```
+
+### 트리거 사전
+
+| Phase | 자연어 트리거 (예시) |
+|---|---|
+| **1–3 (sysdesign-design)** | `채팅 시스템 만들어보고 싶어` / `알림 시스템 설계하자` / `news feed 만들` / `url shortener 설계` / `시스템 만들어보고 싶` / `시스템 디자인 시작` |
+| **5 (sysdesign-sdd)** | `SDD 작성` / `sdd로 넘어가` / `정식 설계 문서 만들자` / `software design document` |
+| **6 (sysdesign-impl)** | `구현하자` / `최소 구현` / `MVI 만들` / `소스 스캐폴드` / `프로토타입 만들` |
+| **frameworks** (자동) | `back-of-envelope` / `개략적 규모` / `캐시 도입` / `제프 딘` / `latency` / `샤딩` / `fan-out` / `db 선택` / `cap 정리` / `quorum` / `snowflake` / `consistent hashing` / `토큰 버킷` (총 30+) |
+
+### 토픽별 산출물 위치
+
+```
+<topic>/
+├── System-Design-Document/
+│   ├── mock-interview.md        ← Phase 1–3 결과 (즉시 갱신)
+│   ├── sdd.md                   ← Phase 5 결과
+│   └── diagrams/
+├── source/                      ← Phase 6 결과 (MVI 코드 + docker-compose.yml)
+├── test-results/                ← 사용자가 실행한 테스트 결과
+└── conversation-log/            ← AI와의 대화 자동 기록 (gitignored)
+    └── YYYY-MM-DD.log
+```
+
+### 지원되는 12개 토픽 (Alex Xu Vol.1)
+
+`rate-limiter` · `consistent-hashing` · `key-value-store` · `unique-id-generator` · `url-shortener` · `web-crawler` · `notification-system` · `news-feed` · `chat-system` · `search-autocomplete` · `youtube` · `google-drive`
+
+추천 학습 순서: `rate-limiter` → `url-shortener` → `notification-system` → `news-feed` → `search-autocomplete` → `chat-system` → `key-value-store`. 자세한 내용은 `.claude/skills/sysdesign-question-bank/SKILL.md`.
+
+Vol.2 토픽(proximity service / nearby friends / Google Maps / 분산 메시지 큐 / 메트릭 모니터링 / ad click aggregation / hotel reservation)은 책이 라이브러리에 없어서 미지원 — 직접 가정 입력하면 진행 가능.
+
+### 대화 로그 자동 정리 정책
+
+대화 로그는 **gitignore**되며 (개인 정보 보호 + 저장 공간 관리) 다음 정책으로 자동 정리:
+
+| 토픽 상태 | 판정 | 보존 |
+|---|---|---|
+| 활성 (active) | `.omc/state/active-sysdesign-topic.txt` 와 일치 | 무기한 (현재 작업 중) |
+| 완료 (shipped) | `<topic>/source/` 에 파일 있음 (impl 완료) | 마지막 활동 +3일 |
+| 비활성 (abandoned) | active도 아니고 source/도 비어있음 | 마지막 활동 +14일 |
+| catchall (`.claude/logs/`) | 토픽 미설정 상태의 로그 | 3일 |
+
+수동 보존: `<topic>/conversation-log/2026-05-04.log` → `....log.keep` 으로 리네임 (`.log` 만 cleanup 대상).
+
+cleanup은 SessionStart hook (`.claude/hooks/cleanup-logs.mjs`)이 매 세션 시작 시 1회 실행.
+
 ## Getting Started
 
 ```bash
 git clone <this-repo>
 cd sysdesign-challenges
 
-# 새로운 주제 시작
+# 자동: 자연어로 시작
+# (Claude Code 세션 안에서 그냥 말하면 됨)
+# > "채팅 시스템 만들어보고 싶어"
+#   → sysdesign-design 자동 트리거 → chat-system/ 자동 생성
+
+# 수동 (스킬 미사용 시):
 mkdir -p <topic>/System-Design-Document/diagrams
 mkdir -p <topic>/source
 mkdir -p <topic>/test-results
-touch <topic>/System-Design-Document/design-doc.md
+cp templates/System-Design-Document/mock-interview-style.md \
+   <topic>/System-Design-Document/mock-interview.md
 ```
 
 ## Conventions
@@ -124,3 +208,4 @@ touch <topic>/System-Design-Document/design-doc.md
 - 다이어그램: 가능하면 텍스트 기반(Mermaid, ASCII) — diff 가능하도록
 - 커밋 메시지: `<topic>: <change>` (예: `url-shortener: add capacity estimation`)
 - 설계 변경 시: SDD를 먼저 갱신하고, 그다음 코드 수정
+- **로그/대화 파일은 커밋 금지** — `.claude/logs/`, `*/conversation-log/`, `.omc/state/` 모두 gitignored

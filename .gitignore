@@ -2,8 +2,9 @@
 # Claude Code / AI tooling
 # ============================================================
 # .claude/ is now tracked (CLAUDE.md, settings.json, hooks, skills, agents).
-# Only the conversation log catchall is excluded.
+# Excluded: catchall logs + ephemeral worktrees (OMC ralplan/agent isolation).
 .claude/logs/
+.claude/worktrees/
 
 # .omc/ is local-only (research notes, plans, state, notepad — personal).
 .omc/

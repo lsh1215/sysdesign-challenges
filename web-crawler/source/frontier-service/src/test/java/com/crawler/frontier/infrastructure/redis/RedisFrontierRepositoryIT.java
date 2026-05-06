@@ -6,6 +6,7 @@ import com.crawler.frontier.infrastructure.config.FrontierRedisConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -16,13 +17,19 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Verifies the Phase-4 priority+domain queue + lease implementation: payload JSON survives a
+ * round-trip and domain assignment is preserved. The full politeness-lease scenario (Q3) is
+ * covered end-to-end by {@code FrontierServiceIT}.
+ */
 @Testcontainers
-@SpringBootTest(classes = RedisFrontierRepositoryIT.TestApp.class)
+@SpringBootTest(classes = RedisFrontierRepositoryIT.TestApp.class,
+        properties = "frontier.lease-ttl-ms=1000")
 class RedisFrontierRepositoryIT {
 
     @Container
@@ -41,27 +48,25 @@ class RedisFrontierRepositoryIT {
     private RedisFrontierRepository repository;
 
     @Test
-    void enqueue_then_dequeue_returns_FIFO_order() {
-        List<Url> urls = List.of(
-                Url.newUrl("https://a.example.com/", CrawlPriority.MEDIUM),
-                Url.newUrl("https://b.example.com/", CrawlPriority.MEDIUM),
-                Url.newUrl("https://c.example.com/", CrawlPriority.MEDIUM)
-        );
-        urls.forEach(repository::enqueue);
+    void enqueueThenDequeuePreservesPayload() {
+        Instant ts = Instant.parse("2026-05-07T10:00:00Z");
+        Url url = Url.newUrl("https://payload.example.com/p", CrawlPriority.HIGH, ts);
 
-        for (Url expected : urls) {
-            Optional<Url> dequeued = repository.dequeueNext();
-            assertThat(dequeued).isPresent();
-            assertThat(dequeued.get().getUrl()).isEqualTo(expected.getUrl());
-        }
-        assertThat(repository.dequeueNext()).isEmpty();
+        repository.enqueue(url);
+
+        Optional<Url> popped = repository.dequeueNext();
+        assertThat(popped).isPresent();
+        assertThat(popped.get().getUrl()).isEqualTo(url.getUrl());
+        assertThat(popped.get().getDomain().host()).isEqualTo("payload.example.com");
+        assertThat(popped.get().getPriority()).isEqualTo(CrawlPriority.HIGH);
+        assertThat(popped.get().getDiscoveredAt()).isEqualTo(ts);
     }
 
     @SpringBootApplication(exclude = {
             org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
             org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class
     })
-    @Import({FrontierRedisConfig.class, RedisFrontierRepository.class})
+    @Import({FrontierRedisConfig.class, RedisFrontierRepository.class, JacksonAutoConfiguration.class})
     static class TestApp {
     }
 }

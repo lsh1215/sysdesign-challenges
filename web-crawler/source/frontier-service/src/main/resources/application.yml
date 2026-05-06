@@ -1,0 +1,14 @@
+server:
+  port: 8081
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+frontier:
+  queue:
+    priority-weights:
+      HIGH: 5
+      MEDIUM: 3
+      LOW: 1
+  lease-ttl-ms: 1000

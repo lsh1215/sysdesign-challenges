@@ -162,7 +162,11 @@
 
 ### 5.2 Component Diagram
 
-**전체 흐름** (회의 §2):
+**전체 컴포넌트 플로우** (회의 §2):
+
+![Component Flow](diagrams/component-flow.png)
+
+> _아래는 같은 다이어그램의 텍스트 버전 (diff 추적용):_
 
 ```
 [Seed URLs]
@@ -200,6 +204,10 @@
 
 **URL Frontier 내부 구조**:
 
+![URL Frontier Internal](diagrams/url-frontier-internal.png)
+
+> _아래는 같은 다이어그램의 텍스트 버전 (diff 추적용):_
+
 ```
 URL 입력
     ▼
@@ -225,6 +233,23 @@ URL 입력
 ```
 
 > _큐는 priority별 / 도메인별 둘 다 **FIFO**. PriorityQueue 아님._ Priority는 "어느 큐에 넣을지" 결정에만 쓰임.
+
+**MSA 서비스 경계** (Bounded Context 단위):
+
+![Bounded Contexts](diagrams/bounded-contexts.png)
+
+위 컴포넌트들이 deploy 단위로 어떻게 묶이는지 보여주는 그림. 4개 Bounded Context:
+
+| BC | 컴포넌트 | Deploy 단위 |
+|---|---|---|
+| **BC1 · Crawl Lifecycle** | URL Frontier · Crawler Worker (Downloader/DNS/Parser/Extractor/Filter in-process) | `frontier-service` + `crawler-worker (× N)` |
+| **BC2 · Dedup** | Content Seen Checker · URL Seen Checker | thin lib (Worker 내) 또는 별도 service |
+| **BC3 · Storage** | S3/HDFS · Cassandra/DynamoDB · RedisBloom | 인프라 (managed) |
+| **BC4 · Maintenance** | Freshness Scheduler | 별도 cron daemon |
+
+핵심 결정: Worker 안에 5개 컴포넌트(HTML Downloader · DNS Resolver · Content Parser · URL Extractor · URL Filter)를 **in-process 로 묶음**. 한 페이지 처리 lifecycle 동안 RPC hop 0 — 풀 MSA로 가면 800 pages/sec × 5 hop = 4000 RPC/sec 폭증.
+
+> _서비스 경계 결정의 ADR (Worker 묶기 / Dedup 분리 / Freshness 분리) 은 다음 회차 정리 — ADR-005 자리._
 
 ### 5.3 Deployment Topology
 - **Runtime**: {Kubernetes, ECS, Lambda, ...}

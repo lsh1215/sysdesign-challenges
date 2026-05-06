@@ -1,14 +1,5 @@
 # Web Crawler — System Design (Mock Interview Style)
 
-> **이 템플릿은 무엇인가**
-> 시스템 디자인 모의 인터뷰(45–60분) 시뮬레이션용 골격. ByteByteGo / Hello Interview / Donne Martin system-design-primer가 공통적으로 권장하는 3단계(Clarifying → High Level → Drill Down) + 선택적 Wrap-Up으로 구성. 인터뷰 화이트보드 흐름을 그대로 따라가며 의사결정 근거를 남기는 데 목적이 있다.
->
-> **사용법**
->
-> 1. 이 파일을 `<topic>/System-Design-Document/mock-interview.md`로 복사
-> 2. 중괄호(`{...}`)와 안내문(`> _Note:_ ...`)을 자기 답으로 대체
-> 3. 작성 시간 가이드: Clarifying 5분 / High Level 10–15분 / Drill Down 20–25분 / Wrap-Up 5분
-
 ---
 
 ## 0. 메타데이터 (선택)
@@ -115,9 +106,6 @@
 > _회의 미논의 — 핵심 데이터 모델 (URL / Page / Hash 등) 정의 필요._
 
 ### 2.3 Architecture Diagram
-
-> _What goes here_
-> 클라이언트 → LB → API → 캐시/DB/큐의 박스+화살표. ASCII가 가장 빠르다.
 
 **전체 흐름** (회의 §2 컴포넌트 식별):
 

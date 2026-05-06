@@ -14,7 +14,8 @@ public enum CrawlerErrorCode implements ErrorCodeBase {
     CONTENT_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "CRAWLER_004", "Content store unavailable"),
     DOWNLOAD_FAILED(HttpStatus.BAD_GATEWAY, "CRAWLER_005", "Download failed"),
     PARSE_FAILED(HttpStatus.UNPROCESSABLE_ENTITY, "CRAWLER_006", "Parse failed"),
-    FRONTIER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "CRAWLER_007", "Frontier unavailable");
+    FRONTIER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "CRAWLER_007", "Frontier unavailable"),
+    INVALID_CONTENT_HASH(HttpStatus.BAD_REQUEST, "CRAWLER_008", "Invalid content hash");
 
     private final HttpStatus status;
     private final String code;

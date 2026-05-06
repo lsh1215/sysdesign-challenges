@@ -8,7 +8,8 @@ val lombokVersion: String by project
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":crawler-shared-infra"))
+    // Same cycle-avoidance rationale as :crawler-worker — shared-infra picked up at runtime only.
+    runtimeOnly(project(":crawler-shared-infra"))
 
     compileOnly("org.projectlombok:lombok:$lombokVersion")
     annotationProcessor("org.projectlombok:lombok:$lombokVersion")

@@ -30,15 +30,21 @@ function localDateAndTime(d = new Date()) {
   return { date, time };
 }
 
+// If we're invoked from inside an OMC worktree
+// (e.g., <main>/.claude/worktrees/<name>/...), redirect to the main root so
+// that active-topic state and conversation logs live in one canonical place.
+function getMainProjectDir(dir) {
+  const m = dir.match(/^(.+)\/\.claude\/worktrees\/[^/]+/);
+  return m ? m[1] : dir;
+}
+
 function readActiveTopic(projectDir) {
   try {
     const slug = readFileSync(
       join(projectDir, ".omc", "state", "active-sysdesign-topic.txt"),
       "utf8"
     ).trim();
-    // Reject anything with path separators or leading dots — only plain slug allowed.
-    if (!slug || /[\/\\.]|^$/.test(slug.replace(/-/g, ""))) return null;
-    if (slug.includes("/") || slug.includes("\\") || slug.startsWith(".")) return null;
+    if (!slug || slug.includes("/") || slug.includes("\\") || slug.startsWith(".")) return null;
     return slug;
   } catch {
     return null;
@@ -58,7 +64,9 @@ function main() {
     const input = readStdin();
     const prompt = (input.prompt || "").trim();
     const sessionId = (input.session_id || "unknown").slice(0, 8);
-    const projectDir = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+    const projectDir = getMainProjectDir(
+      process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd()
+    );
 
     if (!prompt) {
       process.stdout.write(JSON.stringify({ continue: true }));

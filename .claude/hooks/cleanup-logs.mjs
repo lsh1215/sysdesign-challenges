@@ -36,6 +36,13 @@ function readStdin() {
   }
 }
 
+// If invoked from inside an OMC worktree, redirect to the main root so cleanup
+// operates on the canonical topic dirs and catchall logs.
+function getMainProjectDir(dir) {
+  const m = dir.match(/^(.+)\/\.claude\/worktrees\/[^/]+/);
+  return m ? m[1] : dir;
+}
+
 function readActiveTopic(projectDir) {
   try {
     const slug = readFileSync(
@@ -122,7 +129,9 @@ function findTopicDirs(projectRoot) {
 function main() {
   try {
     const input = readStdin();
-    const projectDir = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+    const projectDir = getMainProjectDir(
+      process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd()
+    );
     const now = Date.now();
 
     // Tier 1: catchall logs

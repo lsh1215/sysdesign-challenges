@@ -11,6 +11,12 @@
 import { readFileSync, mkdirSync, appendFileSync, existsSync } from "fs";
 import { join } from "path";
 
+// If we're invoked from inside an OMC worktree, redirect to the main root.
+function getMainProjectDir(dir) {
+  const m = dir.match(/^(.+)\/\.claude\/worktrees\/[^/]+/);
+  return m ? m[1] : dir;
+}
+
 function readActiveTopic(projectDir) {
   try {
     const slug = readFileSync(
@@ -99,7 +105,9 @@ function main() {
     const input = readStdin();
     const transcriptPath = input.transcript_path;
     const sessionId = (input.session_id || "unknown").slice(0, 8);
-    const projectDir = process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
+    const projectDir = getMainProjectDir(
+      process.env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd()
+    );
 
     const text = getLatestAssistantText(transcriptPath);
     if (!text) {

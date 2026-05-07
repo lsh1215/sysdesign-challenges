@@ -23,3 +23,8 @@ worker:
     timeout-ms: 5000
     max-size-bytes: 10485760
   thread-count: 4
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

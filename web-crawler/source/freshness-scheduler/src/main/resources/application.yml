@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crawler
+    username: crawler
+    password: crawler
+frontier:
+  base-url: http://localhost:8081
+freshness:
+  cron: "0 0 */6 * * *"
+  stale-threshold-days: 7
+  batch-size: 1000

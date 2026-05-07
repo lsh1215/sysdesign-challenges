@@ -1,0 +1,9 @@
+**/build/
+**/.gradle/
+**/.idea/
+**/*.log
+**/data/
+**/out/
+**/.DS_Store
+.git
+.gitignore

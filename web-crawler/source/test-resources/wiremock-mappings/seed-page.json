@@ -1,0 +1,8 @@
+{
+  "request": { "method": "GET", "url": "/seed-page" },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "text/html" },
+    "body": "<html><body><h1>Seed</h1><a href=\"http://wiremock:8080/page-a\">A</a><a href=\"http://wiremock:8080/page-b\">B</a></body></html>"
+  }
+}

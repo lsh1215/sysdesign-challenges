@@ -1,0 +1,25 @@
+server:
+  port: 8082
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crawler
+    username: crawler
+    password: crawler
+  data:
+    redis:
+      host: localhost
+      port: 6379
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: crawler-html
+frontier:
+  base-url: http://localhost:8081
+worker:
+  poll:
+    delay-ms: 100
+  download:
+    timeout-ms: 5000
+    max-size-bytes: 10485760
+  thread-count: 4

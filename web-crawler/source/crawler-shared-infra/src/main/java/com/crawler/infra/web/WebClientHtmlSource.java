@@ -32,6 +32,14 @@ public class WebClientHtmlSource implements HtmlSource {
             }
             return body;
         } catch (WebClientResponseException e) {
+            // When the body decoder overflows the configured maxInMemorySize on a 2xx response,
+            // WebClient wraps the DataBufferLimitException inside a WebClientResponseException
+            // carrying the original status (e.g. 200). Surface that as size_exceeded so callers
+            // can treat it as a giant-page drop, not a transport/HTTP error.
+            if (hasCause(e, DataBufferLimitException.class)) {
+                log.warn("download size exceeded (wrapped in WebClientResponseException) url={}", url);
+                throw new DownloadException(url, "size_exceeded", e);
+            }
             log.warn("download http error url={} status={}", url, e.getStatusCode());
             throw new DownloadException(url, "http_" + e.getStatusCode().value(), e);
         } catch (DataBufferLimitException e) {
@@ -47,5 +55,17 @@ public class WebClientHtmlSource implements HtmlSource {
             }
             throw new DownloadException(url, "transport_error", e);
         }
+    }
+
+    private static boolean hasCause(Throwable t, Class<? extends Throwable> target) {
+        for (Throwable c = t; c != null; c = c.getCause()) {
+            if (target.isInstance(c)) {
+                return true;
+            }
+            if (c.getCause() == c) {
+                return false;
+            }
+        }
+        return false;
     }
 }

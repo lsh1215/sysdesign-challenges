@@ -1,14 +1,15 @@
 package com.crawler.infra;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 /**
- * Single import surface for consumers ({@code crawler-worker}, {@code freshness-scheduler}). They
- * import this class with {@code @Import(CrawlerInfraAutoConfiguration.class)} from their main
- * application class to pick up every infrastructure adapter without scanning the whole module.
+ * Auto-configuration for crawler infrastructure adapters. Registered via
+ * {@code META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports} so
+ * downstream consumers ({@code crawler-worker}, {@code freshness-scheduler}) pick up every
+ * adapter without a compile-time {@code @Import}.
  */
-@Configuration
+@AutoConfiguration
 @ComponentScan(basePackages = "com.crawler.infra")
 public class CrawlerInfraAutoConfiguration {
 }

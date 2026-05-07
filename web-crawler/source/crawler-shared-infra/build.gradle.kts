@@ -15,10 +15,10 @@ dependencyManagement {
 
 dependencies {
     api(project(":common"))
-    // shared-infra implements outbound ports declared in crawler-worker.domain. We compile against
-    // those interfaces at api scope. Worker depends on shared-infra at runtimeOnly scope (Spring
-    // Boot fat jar / bootRun), so the compile-time graph is acyclic: worker(compile) -> common,
-    // shared-infra(compile) -> worker -> common; runtime: worker -> shared-infra -> worker.
+    // shared-infra implements outbound ports declared in crawler-worker.domain. Keep this at
+    // api scope so consumers compile against the same port types. Cycle is broken on the worker
+    // side: worker declares shared-infra at runtimeOnly + testImplementation only, so
+    // worker:compileJava does NOT depend on shared-infra:compileJava.
     api(project(":crawler-worker"))
 
     api("org.springframework.boot:spring-boot-starter-data-jpa")

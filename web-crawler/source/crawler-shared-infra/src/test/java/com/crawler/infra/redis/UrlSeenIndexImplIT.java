@@ -1,6 +1,5 @@
 package com.crawler.infra.redis;
 
-import com.crawler.infra.config.RedisInfraConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,9 +57,11 @@ class UrlSeenIndexImplIT {
 
     @SpringBootApplication(exclude = {
             org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
-            org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class
+            org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class,
+            org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration.class,
+            com.crawler.infra.CrawlerInfraAutoConfiguration.class
     })
-    @Import({RedisInfraConfig.class, RedisBloomClient.class, UrlSeenIndexImpl.class})
+    @Import({RedisBloomClient.class, UrlSeenIndexImpl.class})
     static class TestApp {
     }
 }

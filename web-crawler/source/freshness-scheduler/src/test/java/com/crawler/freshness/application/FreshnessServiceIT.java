@@ -11,9 +11,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -28,16 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
         classes = FreshnessSchedulerApplication.class,
         properties = {
-                "spring.autoconfigure.exclude=" +
-                        "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration," +
-                        "org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration," +
-                        "org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
                 "minio.endpoint=http://localhost:9000",
                 "minio.access-key=minioadmin",
                 "minio.secret-key=minioadmin",
                 "minio.bucket=crawler-html",
-                "spring.data.redis.host=localhost",
-                "spring.data.redis.port=6379",
                 "freshness.stale-threshold-days=7",
                 "freshness.batch-size=100"
         }
@@ -49,6 +46,12 @@ class FreshnessServiceIT {
             .withDatabaseName("crawler")
             .withUsername("crawler")
             .withPassword("crawler");
+
+    @Container
+    @SuppressWarnings("resource")
+    static final GenericContainer<?> REDIS_STACK = new GenericContainer<>(DockerImageName.parse("redis/redis-stack-server:latest"))
+            .withExposedPorts(6379)
+            .waitingFor(Wait.forListeningPort());
 
     private static WireMockServer wiremock;
 
@@ -72,6 +75,8 @@ class FreshnessServiceIT {
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("frontier.base-url", () -> "http://localhost:" + wiremock.port());
+        registry.add("spring.data.redis.host", REDIS_STACK::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS_STACK.getMappedPort(6379));
     }
 
     @Autowired

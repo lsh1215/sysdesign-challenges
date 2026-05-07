@@ -16,10 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -34,7 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
         classes = CrawlerWorkerApplication.class,
         properties = {
-                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration",
                 "worker.poll.delay-ms=86400000"
         }
 )
@@ -45,6 +47,12 @@ class CrawlPipelineIT {
             .withDatabaseName("crawler")
             .withUsername("crawler")
             .withPassword("crawler");
+
+    @Container
+    @SuppressWarnings("resource")
+    static final GenericContainer<?> REDIS_STACK = new GenericContainer<>(DockerImageName.parse("redis/redis-stack-server:latest"))
+            .withExposedPorts(6379)
+            .waitingFor(Wait.forListeningPort());
 
     @Container
     static final MinIOContainer MINIO = new MinIOContainer("minio/minio:RELEASE.2024-08-17T01-24-54Z")
@@ -74,6 +82,9 @@ class CrawlPipelineIT {
         registry.add("minio.bucket", () -> "crawler-html");
 
         registry.add("frontier.base-url", () -> "http://localhost:" + wiremock.port());
+
+        registry.add("spring.data.redis.host", REDIS_STACK::getHost);
+        registry.add("spring.data.redis.port", () -> REDIS_STACK.getMappedPort(6379));
     }
 
     @Autowired

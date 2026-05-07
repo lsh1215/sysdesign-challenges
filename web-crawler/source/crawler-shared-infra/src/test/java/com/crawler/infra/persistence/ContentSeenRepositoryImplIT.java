@@ -56,7 +56,10 @@ class ContentSeenRepositoryImplIT {
         assertThat(repository.exists(hash)).isTrue();
     }
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude = {
+            org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+            com.crawler.infra.CrawlerInfraAutoConfiguration.class
+    })
     @Import({JpaConfig.class, ContentSeenRepositoryImpl.class, VisitedUrlRepositoryImpl.class})
     static class TestApp {
     }

@@ -60,7 +60,9 @@ class RestFrontierClientIT {
     @SpringBootApplication(exclude = {
             org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
             org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class,
-            org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class
+            org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration.class,
+            org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+            com.crawler.infra.CrawlerInfraAutoConfiguration.class
     })
     @Import({CrawlerWebClientConfig.class, RestFrontierClient.class})
     static class TestApp {

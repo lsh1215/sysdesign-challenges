@@ -75,7 +75,10 @@ class VisitedUrlRepositoryImplIT {
         }
     }
 
-    @SpringBootApplication
+    @SpringBootApplication(exclude = {
+            org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration.class,
+            com.crawler.infra.CrawlerInfraAutoConfiguration.class
+    })
     @Import({JpaConfig.class, VisitedUrlRepositoryImpl.class, ContentSeenRepositoryImpl.class})
     static class TestApp {
     }

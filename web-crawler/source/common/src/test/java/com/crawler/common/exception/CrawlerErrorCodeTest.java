@@ -22,6 +22,7 @@ class CrawlerErrorCodeTest {
                 .containsExactlyInAnyOrder(
                         "URL_NOT_FOUND",
                         "INVALID_URL",
+                        "INVALID_CONTENT_HASH",
                         "BLOOM_FILTER_UNAVAILABLE",
                         "CONTENT_STORE_UNAVAILABLE",
                         "DOWNLOAD_FAILED",

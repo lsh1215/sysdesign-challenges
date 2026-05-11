@@ -205,3 +205,9 @@ temp/
 # Topic conversation logs live at <topic>/conversation-log/ — auto-cleaned by
 # .claude/hooks/cleanup-logs.mjs (3d if shipped / 14d if abandoned / kept while active).
 */conversation-log/
+
+# ============================================================
+# Alex Xu Vol.1 study notes (chapters 1-7) — images are local only
+# ============================================================
+# .md notes are tracked; images stay out of git (PDF-extracted, replaced manually).
+0[1-7]-*/images/

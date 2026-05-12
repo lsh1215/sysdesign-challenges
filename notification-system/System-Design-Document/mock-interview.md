@@ -82,7 +82,7 @@
 | Metric | 계산 | 값 |
 |---|---|---|
 | QPS (avg) | 16,000,000 ÷ 86,400 (= 60×60×24) | ≈ 185 / sec |
-| QPS (peak) | {- peak 배수 논의되지 않음 -} | {-} |
+| QPS (peak) | avg × 2 | ≈ 370 / sec |
 | 알림 로그 14일 저장량 | 16M × 500KB × 14 days | ≈ 100~112 TB |
 | Device 테이블 row | DAU 수준 × 평균 디바이스 수 | {- 정량적으로 논의되지 않음 -} |
 
@@ -290,7 +290,7 @@ NotificationLog
 ## 부록: 자주 빠뜨리는 것 체크리스트
 
 - [x] Non-functional requirement를 **숫자로** 적었는가 (185 QPS, 100TB, 14days)
-- [ ] QPS 추정에 **peak 배수**(×10)를 곱했는가 — *논의 안 됨*
+- [x] QPS 추정에 **peak 배수**를 곱했는가 (×2 적용 → 370 / sec)
 - [x] Architecture diagram에 **데이터 흐름 방향**이 있는가
 - [x] DB 선택을 **access pattern**으로 정당화했는가 (User/Device read-heavy, Log write-heavy)
 - [ ] Cache의 **eviction 정책**을 명시했는가 — *논의 안 됨*

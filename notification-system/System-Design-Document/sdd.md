@@ -79,7 +79,7 @@
 
 ### 3.1 Goals
 
-- G-1: 일일 16M 알림(Push 10M + SMS 1M + Email 5M) 전송 — 평균 ≈ 185 req/sec sustained
+- G-1: 일일 16M 알림(Push 10M + SMS 1M + Email 5M) 전송 — avg ≈ 185 req/sec, peak ≈ 370 req/sec (×2)
 - G-2: 채널별 격리 — 한 채널(3자 서비스)의 장애가 다른 채널로 전파되지 않음
 - G-3: 데이터 유실 최소화 — at-least-once 전송 + idempotency로 사실상 once 보장
 - G-4: 채널 확장성 — 새 3자 서비스 추가 시 기존 시스템 재설계 불필요
@@ -401,7 +401,7 @@
 
 | Category | Requirement | Acceptance Criteria |
 |---|---|---|
-| Performance | Throughput | ≥ 185 req/sec sustained (평균), 버스트 흡수 가능 |
+| Performance | Throughput | ≥ 185 req/sec sustained (avg), peak ≈ 370 req/sec (avg × 2), 버스트 흡수 가능 |
 | Scalability | 채널 확장 | 새 3자 서비스 채널 추가 시 기존 컴포넌트 변경 불필요 (토픽 + 워커만 추가) |
 | Availability | SPOF | 단일 컴포넌트 장애가 전체 알림 시스템 중단을 유발하지 않음 |
 | Reliability | Delivery | at-least-once + idempotency (notification_id) → 사실상 once |
@@ -635,9 +635,10 @@
 ### C. Capacity 추정 상세 계산
 - 일일 총량: 10M (Push) + 1M (SMS) + 5M (Email) = **16M / day**
 - QPS (avg): 16,000,000 ÷ 86,400 ≈ **185 req/sec**
+- QPS (peak): avg × 2 ≈ **370 req/sec**
 - 메시지 크기 가정: 500 KB / 건 (이메일 HTML 템플릿 고려, 이미지 제외)
 - 14일 저장량: 16M × 500KB × 14 ≈ **100~112 TB**
-- Peak QPS 배수 / Bandwidth / Device 테이블 row 수: {- 본 회의에서 정량적으로 다루지 않음 -}
+- Bandwidth / Device 테이블 row 수: {- 본 회의에서 정량적으로 다루지 않음 -}
 
 ### D. Open Questions (미해결)
 - API contract 상세 (request/response schema, 에러 코드, 인증/인가)

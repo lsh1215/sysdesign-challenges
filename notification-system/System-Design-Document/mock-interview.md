@@ -117,6 +117,7 @@
 ### 3.1 Database
 > _Decisions to make_
 > SQL vs NoSQL, 샤딩 전략, 복제 토폴로지, 인덱스, 파티셔닝.
+> 
 
 **알림 서버 DB (User / Device)**
 - **선택**: RDB (정규화 관계형, OLTP)
@@ -129,23 +130,8 @@
 - **샤딩 키 / 구체 제품**: 회의 미합의. Cassandra(partition key=user_id, clustering=created_at desc, TTL native)는 사전학습 §Q3-2 예시.
 
 **스키마 (논의된 필드)**
-```
-User
-  id              PK
-  opt_in_global   BOOLEAN     ← 알림 전체 수신 여부
-  (최소 정보)
 
-Device
-  id              PK
-  user_id         FK → User.id
-  device_token    VARCHAR     ← 3자 서비스 호출용 토큰
-  opt_in_per_channel          ← push/sms/email별 정밀 제어
-
-NotificationLog
-  id              UUID PK     ← idempotency key 겸용
-  payload         JSON        ← 본문 + 부가정보 (device_token 포함)
-  status          ENUM        ← PENDING / SENT / FAILED / DEAD
-```
+<img width="868" height="418" alt="image" src="https://github.com/user-attachments/assets/be75802a-7e8b-4934-9f58-df694dbc51e8" />
 
 - **복제**: {- 논의되지 않음 -}
 - **인덱스**: {- 논의되지 않음 -}

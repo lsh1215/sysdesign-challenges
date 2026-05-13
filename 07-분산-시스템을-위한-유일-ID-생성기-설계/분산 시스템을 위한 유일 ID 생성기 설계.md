@@ -21,7 +21,6 @@
 
 ---
 
-<!-- ![](images/p01-001.png) -->
 
 ## 1단계: 문제 이해 및 설계 범위 확정
 
@@ -86,7 +85,8 @@ UUID 값은 `09c93e23-53j4-346d-bg9a-s24n3452njs2`와 같은 형태를 띤다.
 
 > UUID는 **서버 간 조율 없이 독립적으로 생성 가능.**
 
-<!-- ![](images/p02-002.png) -->
+<img width="938" height="322" alt="image" src="https://github.com/user-attachments/assets/8e1a449d-c124-4b00-a845-ea07d70d1454" />
+
 
 | 장점 | 단점 |
 |---|---|
@@ -100,7 +100,7 @@ UUID 값은 `09c93e23-53j4-346d-bg9a-s24n3452njs2`와 같은 형태를 띤다.
 
 > 핵심: `auto_increment` 기능을 갖춘 **데이터베이스 서버 1대를 중앙 집중형**으로 사용.
 
-<!-- ![](images/p02-003.png) -->
+<img width="944" height="462" alt="image" src="https://github.com/user-attachments/assets/fc6a4dfe-d364-4da5-9d71-462bea242a94" />
 
 | 장점 | 단점 |
 |---|---|
@@ -114,7 +114,7 @@ UUID 값은 `09c93e23-53j4-346d-bg9a-s24n3452njs2`와 같은 형태를 띤다.
 
 > 스노플레이크는 트위터에서 공개한 ID 생성 기법. 위에서 살펴본 방식들 중에는 제대로 요구사항을 충족하는 방식이 없었다. **그러나 이 방식은 충족할 수 있다.**
 
-<!-- ![](images/p03-004.png) -->
+<img width="1006" height="218" alt="image" src="https://github.com/user-attachments/assets/13309773-e5b8-4c65-928c-27bd73b19a6b" />
 
 **64비트 구성**
 
@@ -132,7 +132,7 @@ UUID 값은 `09c93e23-53j4-346d-bg9a-s24n3452njs2`와 같은 형태를 띤다.
 
 > 트위터의 스노플레이크 접근법을 사용해서 상세 설계.
 
-<!-- ![](images/p03-005.png) -->
+<img width="1004" height="256" alt="image" src="https://github.com/user-attachments/assets/190215bf-8364-463a-b8d8-8ab0c4eeef8a" />
 
 - **데이터센터 ID와 서버 ID**: 시스템 시작 시 결정. 일반적으로 운영 중에는 바뀌지 않는다.
   - 잘못 변경하면 **ID 충돌** 발생.
@@ -142,7 +142,7 @@ UUID 값은 `09c93e23-53j4-346d-bg9a-s24n3452njs2`와 같은 형태를 띤다.
 
 > ID 구조에서 가장 중요한 **41비트**. 시간 순으로 정렬 가능하다.
 
-<!-- ![](images/p03-006.png) -->
+<img width="994" height="572" alt="image" src="https://github.com/user-attachments/assets/05b2466b-1919-4125-9d87-d06e5bcea487" />
 
 > 41비트로 표현 가능한 타임스탬프의 최댓값은 **약 69년**. 따라서 이 ID 생성기는 69년 동안만 정상 동작.
 >

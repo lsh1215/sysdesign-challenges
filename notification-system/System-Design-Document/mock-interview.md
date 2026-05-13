@@ -103,41 +103,9 @@
 {- 회의에서 "키가 많지 않을 것 같아서 생략"으로 패스됨. 향후 SDD §8에서 보강 예정 -}
 
 ### 2.4 Architecture Diagram
-> _What goes here_
-> 클라이언트 → LB → API → 캐시/DB/큐의 박스+화살표. ASCII가 가장 빠르다.
 
-```
-[클라이언트 마이크로서비스]     ← 책의 "알림 제공자" (결제/배송/쇼핑 등)
-        │ 알림 요청 (페이로드)
-        ▼
-[알림 서버 (scale-out)]         ← Rate Limit, opt-out 체크
-        │   ├── User DB / Device DB / 토큰 정보
-        │   └── (Redis 캐시 — 도입 가능)
-        ▼
-[Kafka — 채널별 토픽]
-        ├── push-ios
-        ├── push-android
-        ├── sms
-        └── email
-        │
-        ▼
-[Worker — 채널별 분리]          ← 알림 로그 DB 기록, ack/nack
-        ├── Push-iOS Worker     (provider: APNs)
-        ├── Push-Android Worker (provider: FCM)
-        ├── SMS Worker          (provider: Twilio / Nexmo / ...)
-        └── Email Worker        (provider: SendGrid / Mailchimp / ...)
-        ※ 워커는 채널 기준. provider는 워커 내부 strategy로 교체 (post-review A-1)
-        │
-        ▼
-[제3자 서비스]
-        ├── APNs (iOS)
-        ├── FCM (Android)
-        ├── Twilio (SMS)
-        └── SendGrid (Email)
-        │
-        ▼
-[클라이언트 기기]
-```
+<img width="1643" height="659" alt="image" src="https://github.com/user-attachments/assets/e3b4842b-5c44-4b3b-88fe-a53647acd19e" />
+
 
 ---
 

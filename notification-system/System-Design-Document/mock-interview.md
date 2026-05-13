@@ -104,7 +104,7 @@
 
 ### 2.4 Architecture Diagram
 
-<img width="1643" height="659" alt="image" src="https://github.com/user-attachments/assets/e3b4842b-5c44-4b3b-88fe-a53647acd19e" />
+<img width="1859" height="662" alt="image" src="https://github.com/user-attachments/assets/41419cde-3ec7-47fa-b723-5ab610a2659a" />
 
 
 ---
@@ -208,6 +208,8 @@ NotificationLog
 ### 3.6 Monitoring & Observability
 > _Decisions to make_
 > 무엇을 보고 무엇에 알람을 걸 것인가.
+
+<img width="500" height="200" alt="image" src="https://github.com/user-attachments/assets/963c717b-0c23-4010-b794-de6ae460fdd4" />
 
 - **큐 모니터링**: Kafka 토픽별 적체량 — 버스트 시 일시 적체는 OK, **지속적으로 컨슘 속도 < 생산 속도면 위험 신호**
 - **이벤트 추적**: sent / delivered / failed 이벤트 추적 (책 후반 언급, 분석 파이프라인으로)

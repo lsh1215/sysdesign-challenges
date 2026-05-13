@@ -52,7 +52,8 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | 일일 알림 총량 | 16M / day | Push 10M + SMS 1M + Email 5M (Alex Xu p.166) |
-| 평균 페이로드 크기 | 500 KB | 이메일 HTML 템플릿 고려, 이미지 제외 |
+| 평균 페이로드 크기 (회의 합의) | 500 KB | 회의에서 이메일 HTML 템플릿 고려해 합의된 값 |
+| 평균 페이로드 크기 (재산정, **post-review**) | ≈ 30~50 KB | Push ≤4KB (APNs/FCM 제약) + SMS <1KB + Email 50-200KB 가중평균. **회의 가정이 채널 제약 미반영으로 과대 추정**임을 SDD 검토에서 발견 |
 | 데이터 보존 기간 | 14 days (알림 로그) | RAW 로그 기준, 비즈니스 가공 필요 시 별도 |
 | DAU | {- 논의되지 않음 -} | |
 | 글로벌 여부 | {- 논의되지 않음 -} | |
@@ -83,7 +84,8 @@
 |---|---|---|
 | QPS (avg) | 16,000,000 ÷ 86,400 (= 60×60×24) | ≈ 185 / sec |
 | QPS (peak) | avg × 2 | ≈ 370 / sec |
-| 알림 로그 14일 저장량 | 16M × 500KB × 14 days | ≈ 100~112 TB |
+| 알림 로그 14일 저장량 (회의 합의 기반) | 16M × 500KB × 14 days | ≈ 100~112 TB |
+| 알림 로그 14일 저장량 (재산정, **post-review**) | 16M × 50KB × 14 days | ≈ **11 TB** (회의 가정의 1/10. C-1 페이로드 재산정 반영) |
 | Device 테이블 row | DAU 수준 × 평균 디바이스 수 | {- 정량적으로 논의되지 않음 -} |
 
 ### 2.2 Core Entities (Data Model 초안)
@@ -120,10 +122,11 @@
         │
         ▼
 [Worker — 채널별 분리]          ← 알림 로그 DB 기록, ack/nack
-        ├── APNs Worker
-        ├── FCM Worker
-        ├── Twilio Worker
-        └── SendGrid Worker
+        ├── Push-iOS Worker     (provider: APNs)
+        ├── Push-Android Worker (provider: FCM)
+        ├── SMS Worker          (provider: Twilio / Nexmo / ...)
+        └── Email Worker        (provider: SendGrid / Mailchimp / ...)
+        ※ 워커는 채널 기준. provider는 워커 내부 strategy로 교체 (post-review A-1)
         │
         ▼
 [제3자 서비스]

@@ -99,8 +99,13 @@
 
 ### 4.1 Technical Constraints
 
-- 외부 3자 서비스(APNs/FCM/Twilio/SendGrid)의 **rate limit이 채널마다 제각각** — 우리가 통제 불가
+- 외부 3자 서비스(APNs/FCM/Twilio/SendGrid 등)의 **rate limit이 채널마다 제각각** — 우리가 통제 불가
 - 외부 3자 서비스 자체가 본질적으로 unordered delivery (특히 APNs/FCM)
+- **페이로드 크기 제약** (post-review 추가):
+  - APNs ≤ 4 KB (iOS 13+ 일부 5 KB), FCM ≤ 4 KB
+  - SMS ≤ 160 chars (≈ <1 KB)
+  - Email HTML 본문 일반 50~200 KB (이미지 inline 제외)
+  - → §6.3, §9 저장량 추정의 1차 근거
 
 ### 4.2 Organizational / Business Constraints
 
@@ -163,13 +168,17 @@
 ┌─────────────────────────────────┐
 │  Worker (채널별 분리)             │
 │  ├─ notification_log INSERT/UPDATE│
-│  ├─ 3자 서비스 호출                │
+│  ├─ 3자 서비스 호출 (provider별   │
+│  │   strategy로 라우팅)           │
 │  └─ ack / retry / DLT 라우팅      │
 └─────────────────────────────────┘
-   ├─ APNs Worker
-   ├─ FCM Worker
-   ├─ Twilio Worker
-   └─ SendGrid Worker
+   ├─ Push-iOS Worker  (provider: APNs)
+   ├─ Push-Android Worker  (provider: FCM)
+   ├─ SMS Worker  (provider: Twilio / Nexmo / ...)
+   └─ Email Worker  (provider: SendGrid / Mailchimp / ...)
+
+   ※ 워커 명은 채널 기준 (post-review A-1).
+     같은 채널 내 provider는 워커 내부 strategy로 교체 가능 — G-4 채널 확장성 충족.
         │
         │ (기록)
         ▼
@@ -295,8 +304,9 @@
 ### 7.1 Component: Notification Server (알림 서버)
 
 - **Responsibility**: 클라이언트 서비스로부터 알림 요청을 받아 채널별 Kafka 토픽으로 라우팅. 회의에서 합의된 책임:
-  - Rate Limit 적용 (§7.4 참조)
+  - Rate Limit 적용 — 사용자별 스팸 방지 layer (§7.4 참조)
   - User / Device 정보 조회 (opt-out 확인, device token 사용)
+  - **Device fan-out** (post-review B-1 추가): user_id → 해당 user의 모든 Device 조회 (1:N) → 각 device 단위로 Kafka 메시지 N개 produce
   - 채널별 Kafka 토픽 produce
 - **Inputs**: 클라이언트 서비스의 알림 요청 (request schema는 §8.1 미정)
 - **Outputs**: Kafka produce to `push-ios` / `push-android` / `sms` / `email` 중 적절한 토픽
@@ -346,7 +356,7 @@
 ### 7.4 Component: Rate Limiter
 
 - **Responsibility**: 알림 서버 단에서 입구 throttling
-- **위치**: 알림 서버 내부 (컨슈머 단 X — Kafka 큐가 이미 컨슈머 보호)
+- **위치**: 알림 서버 내부 (컨슈머/워커 단 X — Kafka 큐가 이미 컨슈머 보호)
 - **Strategy**: 토큰 버킷 알고리즘
 - **Dimensions**:
   - API별
@@ -354,6 +364,7 @@
   - Kubernetes container별
   - 사용자별 (key=user_id, value=전송 횟수 in Redis)
 - **사례**: 미스터비스트 시나리오 — 구독자 수억 명 동시 발송이 다른 알림을 막지 않도록 입구 차단
+- **목적**: 사용자 스팸 방지 + 버스트 흡수. 3자 서비스 vendor quota 준수는 본 스케일에서 별도 layer 불필요 (ADR-004 post-review note 참조)
 
 ---
 
@@ -379,17 +390,31 @@
 | `{channel}-retry-{backoff}` | Worker (실패 시) | Worker (재시도) | 백오프 단계별 재시도 (예: 5s/30s/5m) |
 | `{channel}-dlt` | Worker (재시도 한계 초과) | 운영자 / Admin Tool | 자동 처리 포기, 수동 재처리 |
 
-**Payload (예시)**
+**Payload (회의 합의 — device_token 포함 형태)**
 ```json
 {
   "notification_id": "uuid-...",     // idempotency key
   "user_id": "...",
   "channel": "PUSH_IOS",
-  "device_token": "...",
+  "device_token": "...",             // ← 회의 합의 (trans. line 281-285)
   "content": { ... },
   "metadata": { ... }
 }
 ```
+
+**Payload (post-review B-2 권장 — device_token 미포함)**
+```json
+{
+  "notification_id": "uuid-...",
+  "user_id": "...",
+  "device_id": "...",                // ← token 대신 device id
+  "channel": "PUSH_IOS",
+  "content": { ... },
+  "metadata": { ... }
+}
+```
+
+> _Note (post-review B-2):_ device_token은 만료/회전되는 자격증명 + PII 성격이라 Kafka retention 토픽(14일)에 영속 저장 시 (1) stale token으로 retry 시 호출 누적 (2) PII 노출 면적 증가 우려. 책은 워커가 매번 Device DB/캐시에서 token resolve 패턴. 회의에선 token을 payload에 박는 흐름이었으나 SDD 검토 단계에서 device_id resolve 방식이 더 안전한 것으로 식별. 회의 결론은 보존하되 두 옵션을 병기.
 
 ### 8.3 UI Flow
 
@@ -436,7 +461,10 @@
 - **재시도 전략**: Kafka retry topic + 백오프 (회의에서 "5번/3번 정도" 재시도 횟수만 합의, 백오프 시간 단계는 미정 — 사전학습 §Q5/Q6 예시 5s/30s/5m 참고)
 - **DLT**: 재시도 한계 초과 메시지 보관 → 자동 처리 중단, 수동 재처리
 - **이중 보장**: Kafka retry/DLT (transport layer) + NotificationLog status (business layer)
-- **Idempotency**: notification_id 기반 dedup — 워커가 PENDING INSERT 시 conflict 처리
+- **Idempotency** (post-review E-2 구체화): notification_id 기반 dedup. 책 p.174 권장 패턴 — "store the ID in cache and check before processing".
+  - 1차 dedup (hot path): 워커가 메시지 수신 시 **Redis SETNX(notification_id, ttl=수분~수시간)** — 이미 키 존재하면 처리 skip
+  - 2차 보강 (영속): NotificationLog INSERT 시 `notification_id` PK / unique constraint로 conflict 처리
+  - Redis cache 도입을 전제로 함 (E-4)
 - **Poison pill 방지** (사전학습 §Q4 — 회의에선 "리트라이 5번/3번 정도 후 DLT 이관" 수준으로 합의): 무한 in-place retry 금지 — max attempts 초과 시 DLT로 양보
 - **Graceful degradation**: 한 채널(예: FCM) 장애 시 다른 채널은 정상 동작 (채널별 분리 덕)
 - **서킷 브레이커 / bulkhead 구체 정책**: {- 본 회의에서 미정의 -}
@@ -490,12 +518,14 @@
 ### ADR-004: Rate Limit을 알림 서버 단에 배치 (컨슈머 단 X)
 
 - **Status**: Accepted
-- **Context**: 버스트 트래픽 대응을 위해 rate limit이 필요. 어디에 거느냐가 논점.
-- **Decision**: 알림 서버 입구에 토큰 버킷 기반 rate limit. 컨슈머 단에는 배치하지 않음.
+- **Context**: 버스트 트래픽 대응 + 사용자 스팸 방지를 위해 rate limit이 필요. 어디에 거느냐가 논점.
+- **Decision**: 알림 서버 입구에 토큰 버킷 기반 rate limit (user_id 단위 등). 컨슈머/워커 단에는 배치하지 않음.
 - **Consequences**:
   - Positive: Kafka 큐가 이미 컨슈머 보호 (버퍼 역할) → 입구에서 막는 게 자원 효율적. 사용자 단/IP/컨테이너별 정밀 제어 가능. 미스터비스트 시나리오 (한 채널 폭주가 전체 막음) 방지.
   - Negative: 알림 서버가 무거워짐 (lookup + throttling)
   - Neutral: 회의 합의 (작성자 주도, 보성 의견 반영)
+
+> _Post-review note (B-3 검토 후 기각):_ SDD 검토 단계에서 "provider quota 준수용 워커 단 rate limit" 다층화가 제안됐으나, **본 시스템 스케일(peak 370 QPS, 채널별 분배 시 가장 빡빡한 Twilio도 vendor 한도의 ~24%)에선 불필요**로 판단하여 미반영. 회의 합의 그대로 알림 서버 단 단일 layer 유지. 향후 트래픽 ×10 이상 성장 시 §18.D Open Questions에서 재검토.
 
 ### ADR-005: 알림 서버 DB와 알림 로그 DB 분리 (DB-per-service)
 
@@ -619,6 +649,7 @@
 | Soft real-time | 엄격한 latency SLA 없이 "최선 노력" 수준의 실시간성. 부하 시 약간의 지연 허용 |
 | Opt-out | 사용자가 알림 수신을 거부하는 설정. 본 시스템에서는 user 단 + device/channel 단 두 레벨 |
 | Burst | 짧은 시간 폭발적으로 몰리는 요청 |
+| post-review | 회의 직후 SDD 작성 단계에서 책(Alex Xu Vol.1 Ch.10) 및 일반 시스템 설계 원리 기준으로 재검토한 결과 도출된 보강/정정. 회의 합의는 보존하면서 보강 사항을 병기하는 형태로 본 문서에 반영됨 |
 
 ---
 
@@ -634,13 +665,16 @@
 
 ### C. Capacity 추정 상세 계산
 - 일일 총량: 10M (Push) + 1M (SMS) + 5M (Email) = **16M / day**
-- QPS (avg): 16,000,000 ÷ 86,400 ≈ **185 req/sec**
-- QPS (peak): avg × 2 ≈ **370 req/sec**
-- 메시지 크기 가정: 500 KB / 건 (이메일 HTML 템플릿 고려, 이미지 제외)
-- 14일 저장량: 16M × 500KB × 14 ≈ **100~112 TB**
+- QPS (avg, **알림 서버 입구 기준**): 16,000,000 ÷ 86,400 ≈ **185 req/sec**
+- QPS (peak): avg × 2 ≈ **370 req/sec** (회의 미합의, 일반 트래픽 가정. 캠페인성 burst는 별도 — post-review C-3 참고)
+- QPS (**fan-out 후 워커 측**, post-review 추가): 사용자당 평균 디바이스 수 N으로 입구 × N. N=2~3 가정 시 **avg ≈ 370~555, peak ≈ 740~1110 req/sec**. 실제 N은 회의 미합의
+- 메시지 크기 (post-review 재산정): 가중평균 **≈ 30~50 KB / 건** (회의 합의 500KB는 채널 페이로드 제약 미반영으로 과대 추정)
+- 14일 저장량: 16M × 50KB × 14 ≈ **11 TB** (post-review). 회의 가정 (500KB × 14) 기준은 100~112 TB였음
 - Bandwidth / Device 테이블 row 수: {- 본 회의에서 정량적으로 다루지 않음 -}
 
 ### D. Open Questions (미해결)
+
+> _Note (post-review)_: 시급 수정은 본 SDD 본문에 직접 반영 (C-1 페이로드 재산정, B-1 fan-out 책임, E-2 dedup 메커니즘, A-1 워커 명 일반화, B-2 device_token 옵션 병기). B-3 rate limit 다층화는 **검토 후 본 스케일에서 불필요로 판단해 기각** — ADR-004 post-review note 참조. 아래는 회의에서도 SDD에서도 결정되지 않은 잔여 항목:
 - API contract 상세 (request/response schema, 에러 코드, 인증/인가)
 - 캐시 전략 구체 (cache-aside / TTL / invalidation)
 - LB 계층 / 알고리즘 / health check
@@ -651,3 +685,4 @@
 - 글로벌 / 멀티 리전, 타임존 처리
 - 배포 / 롤백 / 마이그레이션 전략
 - 테스트 전략 (load / chaos / idempotency)
+- **트래픽 성장 시 워커 단 provider quota rate limit 도입 여부** — 현재 스케일(peak 370 QPS, 가장 빡빡한 Twilio도 vendor 한도의 ~24%)에선 불필요. ×10 성장 시 재검토 (ADR-004 post-review note)

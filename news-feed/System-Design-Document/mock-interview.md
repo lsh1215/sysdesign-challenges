@@ -120,9 +120,7 @@
 
 > _What goes here_
 > 클라이언트 → LB → API → 캐시/DB/큐의 박스+화살표. ASCII가 가장 빠르다.
-
-<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/67fb53f1-9218-4383-af90-cb5ff65a2c95" />
-<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/5f4c7b3f-d17e-46dd-b13c-8406d284fc0c" />
+<img width="938" height="830" alt="image" src="https://github.com/user-attachments/assets/a1716445-2643-438f-96dd-e3e1a18bdb57" />
 
 ---
 
@@ -134,6 +132,8 @@
 ### 3.1 게시글 발행 흐름
 
 회의에서 합의한 발행 경로:
+
+<img width="700" height="840" alt="image" src="https://github.com/user-attachments/assets/67fb53f1-9218-4383-af90-cb5ff65a2c95" />
 
 1. 사용자가 게시글을 작성한다.
 2. Web/API Server가 요청을 받는다.
@@ -176,6 +176,8 @@
 즉, 기본은 **push model(fanout on write)** 이고, celebrity user는 **pull model(fanout on read)** 로 예외 처리한다.
 
 ### 3.3 뉴스 피드 조회 흐름
+
+<img width="700" height="840" alt="image" src="https://github.com/user-attachments/assets/5f4c7b3f-d17e-46dd-b13c-8406d284fc0c" />
 
 1. 사용자가 `GET /v1/me/feed?cursor=&limit=` 요청을 보낸다.
 2. Feed Service가 News Feed Cache에서 사용자의 `post_id` 목록을 가져온다.

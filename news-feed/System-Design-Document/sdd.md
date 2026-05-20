@@ -66,13 +66,7 @@
 
 게시글 발행 경로는 Post Service, Message Queue, Fanout Worker, Graph DB/Follow Store, User Cache, News Feed Cache로 이어진다. 피드 조회 경로는 Feed Service가 News Feed Cache에서 `post_id` 목록을 읽고, Post Cache와 User Cache를 통해 feed item을 hydrate해 응답한다.
 
-```
-Mobile/Web -> LB -> Web/API Server
-                    ├─ write: Post Service -> Post DB -> MQ -> Fanout Worker -> Feed Cache
-                    └─ read:  Feed Service -> Feed Cache -> Post/User Cache -> Response
-
-Media: Object Storage -> CDN
-```
+<img width="900" height="800" alt="image" src="https://github.com/user-attachments/assets/a1716445-2643-438f-96dd-e3e1a18bdb57" />
 
 ---
 

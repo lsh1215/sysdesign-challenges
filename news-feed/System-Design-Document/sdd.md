@@ -142,43 +142,8 @@ Media: Object Storage -> CDN
 
 ### 5.2 Component Diagram
 
-```
-Mobile/Web
-   ↓
-Load Balancer
-   ↓
-Web/API Server
-   ├─────────────── 게시글 발행 경로 ───────────────┐
-   │                                                ↓
-   │                                         Post Service
-   │                                                ↓
-   │                                           Post DB
-   │                                                ↓
-   │                                      post-created event
-   │                                                ↓
-   │                                        Message Queue
-   │                                                ↓
-   │                                         Fanout Worker
-   │                                  ┌─────────────┴─────────────┐
-   │                                  ↓                           ↓
-   │                              Graph DB                  User Cache
-   │                         follower list              visibility filter
-   │                                  └─────────────┬─────────────┘
-   │                                                ↓
-   │                                       News Feed Cache
-   │
-   └─────────────── 뉴스 피드 조회 경로 ───────────────┐
-                                                    ↓
-                                             Feed Service
-                                                    ↓
-                                           News Feed Cache
-                                                    ↓
-                                      Post Cache / User Cache
-                                                    ↓
-                                              JSON Response
-
-Media path: Object Storage -> CDN
-```
+<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/67fb53f1-9218-4383-af90-cb5ff65a2c95" />
+<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/5f4c7b3f-d17e-46dd-b13c-8406d284fc0c" />
 
 ### 5.3 Deployment Topology
 

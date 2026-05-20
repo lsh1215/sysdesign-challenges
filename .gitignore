@@ -2,12 +2,9 @@
 # Claude Code / AI tooling
 # ============================================================
 # .claude/ is now tracked (CLAUDE.md, settings.json, hooks, skills, agents).
-# Excluded: catchall logs + ephemeral worktrees (OMC ralplan/agent isolation).
+# Excluded: catchall logs + ephemeral worktrees.
 .claude/logs/
 .claude/worktrees/
-
-# .omc/ is local-only (research notes, plans, state, notepad — personal).
-.omc/
 
 .aider*
 .cursorrules
@@ -201,7 +198,7 @@ temp/
 # ============================================================
 # Sysdesign — per-topic conversation logs
 # ============================================================
-# .claude/ and .omc/ are already ignored above (catchall logs and state live there).
+# .claude/ catchall logs are already ignored above.
 # Topic conversation logs live at <topic>/conversation-log/ — auto-cleaned by
 # .claude/hooks/cleanup-logs.mjs (3d if shipped / 14d if abandoned / kept while active).
 */conversation-log/
@@ -211,3 +208,38 @@ temp/
 # ============================================================
 # .md notes are tracked; images stay out of git (PDF-extracted, replaced manually).
 0[1-7]-*/images/
+.omx/
+.codex/*
+!.codex/README.md
+!.codex/agents/
+!.codex/agents/spring-boot-expert.toml
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/domain-modeling/
+!.codex/skills/domain-modeling/**
+!.codex/skills/e2e-testing/
+!.codex/skills/e2e-testing/**
+!.codex/skills/event-driven/
+!.codex/skills/event-driven/**
+!.codex/skills/layer-architecture/
+!.codex/skills/layer-architecture/**
+!.codex/skills/new-feature/
+!.codex/skills/new-feature/**
+!.codex/skills/saga-pattern/
+!.codex/skills/saga-pattern/**
+!.codex/skills/spring-bootstrap/
+!.codex/skills/spring-bootstrap/**
+!.codex/skills/spring-exception-handling/
+!.codex/skills/spring-exception-handling/**
+!.codex/skills/sysdesign-design/
+!.codex/skills/sysdesign-design/**
+!.codex/skills/sysdesign-frameworks/
+!.codex/skills/sysdesign-frameworks/**
+!.codex/skills/sysdesign-impl/
+!.codex/skills/sysdesign-impl/**
+!.codex/skills/sysdesign-question-bank/
+!.codex/skills/sysdesign-question-bank/**
+!.codex/skills/sysdesign-sdd/
+!.codex/skills/sysdesign-sdd/**
+!.codex/skills/tdd-patterns/
+!.codex/skills/tdd-patterns/**

@@ -121,46 +121,8 @@
 > _What goes here_
 > 클라이언트 → LB → API → 캐시/DB/큐의 박스+화살표. ASCII가 가장 빠르다.
 
-```
-Mobile/Web
-   ↓
-Load Balancer
-   ↓
-Web/API Server
-   ├─────────────── 게시글 발행 경로 ───────────────┐
-   │                                                ↓
-   │                                         Post Service
-   │                                                ↓
-   │                                           Post DB
-   │                                                ↓
-   │                                      post-created event
-   │                                                ↓
-   │                                        Message Queue
-   │                                                ↓
-   │                                         Fanout Worker
-   │                                  ┌─────────────┴─────────────┐
-   │                                  ↓                           ↓
-   │                              Graph DB                  User Cache
-   │                         follower list              visibility filter
-   │                                  └─────────────┬─────────────┘
-   │                                                ↓
-   │                                       News Feed Cache
-   │                                   feed:{reader_user_id}
-   │
-   └─────────────── 뉴스 피드 조회 경로 ───────────────┐
-                                                    ↓
-                                             Feed Service
-                                                    ↓
-                                           News Feed Cache
-                                             post_id list
-                                                    ↓
-                                      Post Cache / User Cache
-                                      post hydrate / author hydrate
-                                                    ↓
-                                              JSON Response
-
-Media path: Object Storage -> CDN
-```
+<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/67fb53f1-9218-4383-af90-cb5ff65a2c95" />
+<img width="500" height="600" alt="image" src="https://github.com/user-attachments/assets/5f4c7b3f-d17e-46dd-b13c-8406d284fc0c" />
 
 ---
 
